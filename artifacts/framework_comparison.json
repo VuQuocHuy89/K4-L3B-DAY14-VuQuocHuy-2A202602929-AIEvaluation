@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0",
+  "comparison": {
+    "dataset": "golden_dataset.json + artifacts/actual_answers.json",
+    "dataset_size": 20,
+    "sample_ids": [
+      "E01",
+      "H03",
+      "A01"
+    ],
+    "same_inputs_for_both_frameworks": true,
+    "retrieved_chunks_per_case": 5,
+    "judge_provider": "Groq OpenAI-compatible API",
+    "judge_model": "openai/gpt-oss-20b",
+    "judge_reasoning_effort": "low",
+    "metrics": [
+      "faithfulness",
+      "context_precision",
+      "context_recall"
+    ],
+    "metric_mapping": {
+      "ragas": {
+        "faithfulness": "Faithfulness",
+        "context_precision": "LLMContextPrecisionWithReference",
+        "context_recall": "LLMContextRecall"
+      },
+      "deepeval": {
+        "faithfulness": "FaithfulnessMetric",
+        "context_precision": "ContextualPrecisionMetric",
+        "context_recall": "ContextualRecallMetric"
+      }
+    },
+    "framework_versions": {
+      "ragas": "0.4.3",
+      "deepeval": "4.2.7"
+    },
+    "evaluated_at": {
+      "ragas": "2026-10-01T05:08:30.094520+00:00",
+      "deepeval": "2026-10-01T05:14:28.710242+00:00"
+    }
+  },
+  "per_case": {
+    "E01": {
+      "ragas": {
+        "faithfulness": 1.0,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      },
+      "deepeval": {
+        "faithfulness": 1.0,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    },
+    "H03": {
+      "ragas": {
+        "faithfulness": 0.5,
+        "context_precision": 0.7499999999625,
+        "context_recall": 0.5
+      },
+      "deepeval": {
+        "faithfulness": 0.8,
+        "context_precision": 0.8875,
+        "context_recall": 1.0
+      }
+    },
+    "A01": {
+      "ragas": {
+        "faithfulness": 1.0,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      },
+      "deepeval": {
+        "faithfulness": 1.0,
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "mean_scores": {
+    "ragas": {
+      "faithfulness": 0.833333,
+      "context_precision": 0.916667,
+      "context_recall": 0.833333
+    },
+    "deepeval": {
+      "faithfulness": 0.933333,
+      "context_precision": 0.9625,
+      "context_recall": 1.0
+    }
+  },
+  "deepeval_h03_reasons": {
+    "faithfulness": "The score is 0.80 because the actual output incorrectly states that the device will not be repaired under warranty, which directly contradicts the retrieval context that says warranty service may result in repair, replacement, or refund.",
+    "context_precision": "The score is 0.89 because the relevant nodes (1, 2, 4, 5) are ranked higher than the irrelevant node (3). Node 1 explains repair for a fee, node 2 confirms the 24‑month period, node 4 states liquid damage is excluded, and node 5 details repair procedures—all directly support the answer. Node 3, which discusses shipping damage and return policies, is unrelated and appears lower in the ranking, keeping the precision high but not perfect.",
+    "context_recall": "The score is 1.00 because every sentence in the expected output is directly supported by the retrieval context, as shown by the matching statements in node 1."
+  },
+  "interpretation": {
+    "shared_signal": "Both frameworks score E01 and A01 highly and identify H03 as the weakest faithfulness case.",
+    "score_differences": "DeepEval is higher on all three sample means; the largest gap is Context Recall. On H03, RAGAS scores faithfulness 0.50 and recall 0.50, while DeepEval scores 0.80 and 1.00.",
+    "limitation": "This is an exploratory 3-case sample, not a statistically representative estimate for all 20 QA pairs. Metric prompts and claim handling differ, so scores are not interchangeable; review H03 rationale and calibrate against human labels before setting thresholds."
+  }
+}

@@ -243,14 +243,18 @@ class TextGenerator(Protocol):
 
 
 class OpenAIGenerator:
-    def __init__(self, max_output_tokens: int = 300) -> None:
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    def __init__(self, max_output_tokens: int = 1200) -> None:
+        groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+        api_key = groq_api_key or os.getenv("OPENAI_API_KEY", "").strip()
         self.model = os.getenv("OPENAI_MODEL", "").strip()
         if not api_key:
-            raise RuntimeError("OPENAI_API_KEY is missing from .env")
+            raise RuntimeError("GROQ_API_KEY (or OPENAI_API_KEY) is missing from .env")
         if not self.model:
             raise RuntimeError("OPENAI_MODEL is missing from .env")
-        self.client = OpenAI(api_key=api_key)
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip()
+        if groq_api_key and not base_url:
+            base_url = "https://api.groq.com/openai/v1"
+        self.client = OpenAI(api_key=api_key, base_url=base_url or None)
         self.max_output_tokens = max_output_tokens
 
     def generate(self, prompt: str) -> str:
@@ -261,8 +265,25 @@ class OpenAIGenerator:
             max_output_tokens=self.max_output_tokens,
         )
         answer = response.output_text.strip()
+        incomplete_reason = getattr(
+            getattr(response, "incomplete_details", None), "reason", None
+        )
+        if not answer and incomplete_reason == "max_output_tokens":
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt,
+                temperature=0,
+                max_output_tokens=max(4096, self.max_output_tokens * 4),
+            )
+            answer = response.output_text.strip()
         if not answer:
-            raise RuntimeError("OpenAI returned an empty answer")
+            status = getattr(response, "status", "unknown")
+            reason = getattr(
+                getattr(response, "incomplete_details", None), "reason", None
+            )
+            raise RuntimeError(
+                f"Model API returned an empty answer (status={status}, reason={reason})"
+            )
         return answer
 
 
